@@ -1,0 +1,40 @@
+device: '/dev/ttyUSB0'
+baudrate: 115200
+debug: false
+
+thrusters:
+    t1:
+        slave: 1
+        timChId: 0
+    t2:
+        slave: 1
+        timChId: 1
+    t3:
+        slave: 2
+        timChId: 2
+    t4:
+        slave: 2
+        timChId: 3
+
+leds:
+    l1:
+        slave: 1
+        timChId: 0
+    l2:
+        slave: 1
+        timChId: 1
+
+bcs:
+    b1:
+        slave: 1
+        timChId: 0
+        dirGPIOChId: 0
+        disGPIOChId: 0 
+        termGPIOChId: 0
+    b2:
+        slave: 2
+        timChId: 1
+        dirGPIOChId: 0
+        disGPIOChId: 0 
+        termGPIOChId: 0
+
