@@ -3,10 +3,10 @@ baudrate: 115200
 debug: false
 rate: 1
 
-#thrusters:
-    #t1:
-        #slave: 1
-        #id: 0
+thrusters:
+    t1:
+        slave: 1
+        id: 0
     #t2:
         #slave: 1
         #id: 1
@@ -19,11 +19,21 @@ rate: 1
 
 #leds:
     #l1:
-        #slave: 1
+        #slave: 2 # nos
         #id: 0
     #l2:
-        #slave: 1
+        #slave: 2
         #id: 1
+    #l3:
+        #slave: 2
+        #id: 2
+    #l4:
+        #slave: 2
+        #id: 3
+    #l5:
+        #slave: 2
+        #id: 4
+
 
 #bcs:
     #b1:
@@ -34,4 +44,4 @@ rate: 1
         #id: 1
 
 #ms5837:
-    #slave: 2
+    #slave: 2 # nos

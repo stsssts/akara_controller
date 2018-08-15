@@ -1,0 +1,6 @@
+<launch>
+    <node name="device_reconfigure" pkg="akara_controller" type="device_configure" output="screen">
+        <rosparam command="load" file="$(find akara_controller)/config/device_config.yaml" />
+        <param name="debug" value="false" />
+    </node>
+</launch>
