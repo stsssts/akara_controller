@@ -1,5 +1,5 @@
 <launch>
-  <node name="allo" pkg="akara_controller" type="akara_controller_node" output="screen">
+  <node name="akara" pkg="akara_controller" type="akara_controller_node" output="screen">
     <rosparam command="load" file="$(find akara_controller)/config/device_id.yaml" />
     <param name="debug" value="false" />
   </node>
