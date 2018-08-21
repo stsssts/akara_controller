@@ -288,6 +288,6 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "akara_controller_node");
   ros::NodeHandle nh;
   AkaraController ac(nh);
-//  ros::spin();
+  ros::spin();
   return EXIT_SUCCESS;
 }
