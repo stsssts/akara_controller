@@ -19,6 +19,7 @@ public:
     context_ = modbus_new_rtu(device, baud, 'N', 8, 1);
 
     modbus_set_debug(context_, debug);
+//    modbus_set_response_timeout(context_, 1, 0);
     if (modbus_connect(context_) == -1)
     {
       modbus_free(context_);
@@ -78,6 +79,11 @@ public:
     return set(slave, RESET_CONFIG, 0, NULL);
   }
 
+  bool deinitializeConfig(uint8_t slave)
+  {
+    return set(slave, DEINITIALIZE_CONFIG, 0, NULL);
+  }
+
   void reset(uint8_t slave)
   {
     set(slave, RESET, 0, NULL);
@@ -91,7 +97,8 @@ private:
     SAVE_CONFIG  = 0x02,
     RESET_CONFIG = 0x03,
     RESET        = 0x04,
-    READ_BUFFER  = 0x06
+    READ_BUFFER  = 0x06,
+    DEINITIALIZE_CONFIG = 0x07
   };
 
   modbus_t *context_;
@@ -137,7 +144,7 @@ private:
   {
     if (abs(sp) > 1.0)
       sp = copysign(1.0, sp);
-    return (sp + 1) * 255 / 2 - 127;
+    return sp * 127;
   }
 
   enum Command : int
@@ -154,8 +161,8 @@ private:
 class LED
 {
 public:
-  LED(ModbusWorker *modbus, uint8_t slave, uint8_t ledId)
-    : mw_(modbus), slave_(slave)
+  LED(ModbusWorker *modbus, uint8_t slave, uint8_t ledId, bool smart=true)
+    : mw_(modbus), slave_(slave), smart_(smart)
   {
     br_req_.data.device_id = ledId;
   }
@@ -167,8 +174,9 @@ public:
 
   bool initialize(uint8_t timChId)
   {
+    int cmd = smart_ ? INIT_S : INIT_S;
     uint16_t d = timChId << 8;
-    if (!mw_->set(slave_, INIT, 1, &d))
+    if (!mw_->set(slave_, cmd, 1, &d))
       return false;
     mw_->readBuffer(slave_, 1, &d);
     br_req_.data.device_id = d >> 8;
@@ -177,8 +185,9 @@ public:
 
   bool setBrightness(float power)
   {
+    int cmd = smart_ ? SET_BRIGHTNESS_S : SET_BRIGHTNESS;
     br_req_.data.power = _calculatePower(power);
-    return mw_->set(slave_, SET_BRIGHTNESS, br_req_.BINARY_DATA_SIZE, br_req_.binary);
+    return mw_->set(slave_, cmd, br_req_.BINARY_DATA_SIZE, br_req_.binary);
   }
 
   int getId()
@@ -189,8 +198,10 @@ public:
 private:
   enum Command
   {
-      INIT = 0x20,
-      SET_BRIGHTNESS = 0x21
+    INIT = 0x20,
+    SET_BRIGHTNESS = 0x21,
+    INIT_S = 0x50,
+    SET_BRIGHTNESS_S = 0x51
   };
 
   uint8_t _calculatePower(double pow)
@@ -204,16 +215,20 @@ private:
 
   ModbusWorker *mw_;
   const uint8_t slave_;
+  const bool smart_;
   power_data_t br_req_;
 };
 
 class BCS
 {
 public:
-  BCS(ModbusWorker *modbus, uint8_t slave, uint8_t bcsId)
+  BCS(ModbusWorker *modbus, uint8_t slave, uint8_t bcsId, uint8_t speed)
     : mw_(modbus), slave_(slave), device_id_(bcsId)
   {
     pos_ = 0;
+    neutral_pos_ = 200; // eto odin oborot
+
+    setSpeed(speed);
   }
 
   bool initialize(uint8_t timChID, uint8_t dirGPIOChId,
@@ -232,9 +247,9 @@ public:
     return true;
   }
 
-  bool setSpeed(int8_t speed)
+  bool setSpeed(uint8_t speed)
   {
-    power_data_t sp_req;
+    set_speed_bcs_data_t sp_req;
     sp_req.data.device_id = device_id_;
     sp_req.data.power = speed;
     return mw_->set(slave_, SET_SPEED, sp_req.BINARY_DATA_SIZE, sp_req.binary);
@@ -269,6 +284,7 @@ public:
   {
     pos_ = 0;
     int steps = neutral_pos_- pos_;
+    pos_ = neutral_pos_;
     if (steps > 0)
       move(1, steps);
     else
@@ -314,13 +330,21 @@ public:
   bool checkConnection()
   {
     if (!mw_)
+    {
+      enabled_ = false;
       return false;
+    }
 
     uint16_t data[1];
     if (mw_->get(slave_, CHECK_CONNECTION, 1, data))
-      return !data[0];
+      return enabled_ = !data[0];
 
     return false;
+  }
+
+  bool ok()
+  {
+    return enabled_;
   }
 
   bool readTemp(float *temp)
@@ -388,6 +412,7 @@ private:
 
   ModbusWorker *mw_;
   uint8_t slave_;
+  bool enabled_;
 };
 
 }

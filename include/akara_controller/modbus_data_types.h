@@ -83,6 +83,24 @@ union init_bcs_data_t
 
 
 #pragma pack (push, 1)
+union set_speed_bcs_data_t
+{
+  enum
+  {
+    BINARY_DATA_SIZE = 1
+  };
+  struct
+  {
+    uint8_t  power;     // 0.5
+    uint8_t  device_id; // 0.5
+  } data;
+
+  uint16_t binary[BINARY_DATA_SIZE];
+};
+#pragma pack (pop)
+
+
+#pragma pack (push, 1)
 union move_bcs_data_t
 {
   enum

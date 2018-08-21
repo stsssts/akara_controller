@@ -5,27 +5,34 @@ debug: false
 slaves:
     nos:
         id: 1
-        thrusters:
-            t1:
-                timChId: 0
-            t2:
-                timChId: 1
+        #thrusters:
+            #t1:
+                #timChId: 0
+            #t2:
+                #timChId: 1
         leds:
             l1:
-                timChId: 2
-    hvost:
-        id: 2
-        bcs:
-            b1:
                 timChId: 0
-                dirGPIOChId: 0
-                disGPIOChId: 0
-                termGPIOChId: 0
-    seredina:
-        id: 3
-        bcs:
-            b2:
-                timChId: 1
-                dirGPIOChId: 0
-                disGPIOChId: 0
-                termGPIOChId: 0
+                smart: true
+        #bcs:
+          #b1:
+                #timChId: 0
+                #dirGPIOChId: 0
+                #disGPIOChId: 1
+                #termGPIOChId: 2
+    #hvost:
+        #id: 2
+        #bcs:
+            #b1:
+                #timChId: 0
+                #dirGPIOChId: 0
+                #disGPIOChId: 0
+                #termGPIOChId: 0
+    #seredina:
+        #id: 3
+        #bcs:
+            #b2:
+                #timChId: 1
+                #dirGPIOChId: 0
+                #disGPIOChId: 0
+                #termGPIOChId: 0

@@ -60,6 +60,7 @@ private:
       return;
     }
 
+//    mw_.resetConfig(id);
     for (auto devices : slave)
     {
       if (devices.first == "thrusters")
@@ -69,7 +70,7 @@ private:
       else if (devices.first == "bcs")
         configureBCS_(id, devices.second);
     }
-    mw_.saveConfig(id);
+//    mw_.saveConfig(id);
   }
 
   void configureThrusters_(int slave, XmlRpc::XmlRpcValue& params)
@@ -92,11 +93,11 @@ private:
       }
       ROS_INFO("Adding thruster %s with id %i", t_params.first.c_str(), thruster.getId());
 
-      ROS_WARN("Testing...");
-      ros::Rate r(2);
-      r.sleep();
-      thruster.setSpeed(0.2);
-      r.sleep();
+//      ROS_WARN("Testing...");
+//      ros::Duration r(5);
+//      r.sleep();
+//      thruster.setSpeed(0.1);
+//      r.sleep();
     }
   }
 
@@ -110,20 +111,21 @@ private:
         continue;
       }
 
+      if (!l_params.second.hasMember("smart"))
+      {
+        ROS_ERROR("Led %s doesn't have smart param", l_params.first.c_str());
+        continue;
+      }
+
       int timChId = l_params.second["timChId"];
-      LED led(&mw_, slave, 0);
+      bool smart = l_params.second["smart"];
+      LED led(&mw_, slave, 0, smart);
       if (!led.initialize(timChId))
       {
         ROS_INFO("Can't add led at channel %i", timChId);
         continue;
       }
       ROS_INFO("Adding led %s with id %i", l_params.first.c_str(), led.getId());
-
-      ROS_WARN("Testing...");
-      ros::Rate r(2);
-      r.sleep();
-      led.setBrightness(0.2);
-      r.sleep();
     }
   }
 
@@ -157,20 +159,13 @@ private:
       int disGPIOChId = b_params.second["disGPIOChId"];
       int termGPIOChId = b_params.second["termGPIOChId"];
 
-      BCS bcs(&mw_, slave, 0);
+      BCS bcs(&mw_, slave, 0, 0);
       if (!bcs.initialize(timChId, dirGPIOChId, disGPIOChId, termGPIOChId))
       {
         ROS_INFO("Can't add bcs at channel %i", timChId);
         continue;
       }
       ROS_INFO("Adding bcs %s with id %i", b_params.first.c_str(), bcs.getId());
-
-      ROS_WARN("Testing...");
-      ros::Rate r(2);
-      r.sleep();
-      bcs.setSpeed(0.2);
-      r.sleep();
-      bcs.stop();
     }
   }
 
