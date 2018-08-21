@@ -1,0 +1,5 @@
+<launch>
+  <node name="tnpa_module" pkg="akara_controller" type="akara_controller_node" output="screen">
+    <rosparam command="load" file="$(find akara_controller)/config/tnpa.yaml" />
+  </node>
+</launch>

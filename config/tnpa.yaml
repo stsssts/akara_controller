@@ -1,0 +1,20 @@
+device: '/dev/ttyUSB0'
+baudrate: 115200
+debug: false
+rate: 10 # Hz
+
+slaves:
+    module:
+        id: 1
+        leds:
+            led:
+                timChId: 2
+                smart: true
+        bcs:
+            manipulator:
+                timChId: 0
+                dirGPIOChId: 0
+                disGPIOChId: 1
+                termGPIOChId: 2
+                speed: 100
+        ms5837: true

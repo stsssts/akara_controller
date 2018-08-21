@@ -60,7 +60,6 @@ private:
       return;
     }
 
-//    mw_.resetConfig(id);
     for (auto devices : slave)
     {
       if (devices.first == "thrusters")
@@ -70,7 +69,7 @@ private:
       else if (devices.first == "bcs")
         configureBCS_(id, devices.second);
     }
-//    mw_.saveConfig(id);
+    mw_.saveConfig(id);
   }
 
   void configureThrusters_(int slave, XmlRpc::XmlRpcValue& params)

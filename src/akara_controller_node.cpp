@@ -173,6 +173,7 @@ private:
       return;
     }
 
+    ROS_INFO("Configure slave %i", id);
     for (auto devices : slave)
     {
       if (devices.first == "thrusters")
@@ -182,7 +183,11 @@ private:
       else if (devices.first == "bcs")
         loadBCSParameters_(id, devices.second);
       else if (devices.first == "ms5837")
-        loadMS5837Parameters_(id);
+      {
+        bool load = devices.second;
+        if (load)
+          loadMS5837Parameters_(id);
+      }
     }
   }
 
