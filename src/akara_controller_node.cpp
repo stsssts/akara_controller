@@ -99,7 +99,7 @@ public:
     for (int i = 0; i < msg->power.size(); ++i)
     {
       uint8_t dir = msg->power[i] < 0 ? 0 : 1;
-      uint16_t steps = static_cast<uint16_t>(msg->power[i]);
+      uint16_t steps = static_cast<uint16_t>(abs(msg->power[i]));
       ROS_INFO("Moving bcs %i %u steps %u dir", i, steps, dir);
       bcs_[i].move(dir, steps);
     }

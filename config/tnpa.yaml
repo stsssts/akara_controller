@@ -7,14 +7,16 @@ slaves:
     module:
         id: 1
         leds:
-            led:
+            camera_led:
+                id: 0
                 timChId: 2
                 smart: true
         bcs:
             manipulator:
+                id: 0
                 timChId: 0
-                dirGPIOChId: 0
-                disGPIOChId: 1
+                dirGPIOChId: 1
+                disGPIOChId: 0
                 termGPIOChId: 2
                 speed: 100
         ms5837: true
