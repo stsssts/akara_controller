@@ -100,43 +100,50 @@ public:
     {
       uint8_t dir = msg->power[i] < 0 ? 0 : 1;
       uint16_t steps = static_cast<uint16_t>(abs(msg->power[i]));
-      ROS_INFO("Moving bcs %i %u steps %u dir", i, steps, dir);
       bcs_[i].move(dir, steps);
+      ROS_INFO("Moving bcs%i %u steps, dir: %u, position: %i", i, steps, dir, bcs_[i].getPosition());
     }
   }
 
   bool bcsPositionCallback(akara_msgs::BCSRequest& req, akara_msgs::BCSResponse& res)
   {
-    try
+    if (req.buoyancy == "set_zero")
     {
-      ROS_INFO("set speed: %u", bcs_[0].setSpeed(std::stoi(req.buoyancy)));
+      for (auto& bcs : bcs_)
+        bcs.setZero(); // sets current position to zero
       return true;
     }
-    catch (std::exception& e)
+
+    if (req.buoyancy == "positive")
     {
-      if (req.buoyancy == "positive")
-      {
-        for (auto& bcs : bcs_)
-          ROS_INFO("move to end: %u", bcs.moveToEnd(0));
-        return true;
-      }
-
-      if (req.buoyancy == "negative")
-      {
-        for (auto& bcs : bcs_)
-          bcs.moveToEnd(1);
-        return true;
-      }
-
-      if (req.buoyancy == "neutral")
-      {
-        for (auto& bcs : bcs_)
-          bcs.setNeutral();
-        return true;
-      }
+      for (auto& bcs : bcs_)
+        bcs.moveToEnd(1);
+      return true;
     }
 
-    return true;
+    if (req.buoyancy == "negative")
+    {
+      for (auto& bcs : bcs_)
+        bcs.moveToEnd(0);
+      return true;
+    }
+
+    if (req.buoyancy == "neutral")
+    {
+      for (auto& bcs : bcs_)
+        bcs.moveToNeutral();
+      return true;
+    }
+
+    if (req.buoyancy == "stop")
+    {
+      for (auto& bcs : bcs_)
+        bcs.stop();
+      return true;
+    }
+
+    ROS_ERROR("Use one of the following commands: set_zero, positive, negative, neutral, stop");
+    return false;
   }
 
   void publishPressure(const ros::TimerEvent& event)
@@ -221,11 +228,29 @@ private:
         ROS_ERROR("Doesn't find speed parameter for bcs");
         continue;
       }
+      if (!p.second.hasMember("neutral_position"))
+      {
+        ROS_ERROR("Doesn't find neutral position parameter for bcs");
+        continue;
+      }
+      if (!p.second.hasMember("maximum_position"))
+      {
+        ROS_ERROR("Doesn't find neutral position parameter for bcs");
+        continue;
+      }
+      if (!p.second.hasMember("positive_direction"))
+      {
+        ROS_ERROR("Doesn't find neutral position parameter for bcs");
+        continue;
+      }
 
       int id = p.second["id"];
       int speed = p.second["speed"];
+      int neutral_pos = p.second["neutral_position"];
+      int max_pos = p.second["maximum_position"];
+      int positive_dir= p.second["positive_direction"];
 
-      bcs_.push_back(BCS(&modbus_, slave, id, speed));
+      bcs_.push_back(BCS(&modbus_, slave, id, speed, neutral_pos, max_pos, positive_dir));
       ROS_INFO("Added bcs %s - slave: %i, id: %i", p.first.c_str(), slave, id);
     }
   }

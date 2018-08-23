@@ -18,5 +18,8 @@ slaves:
                 dirGPIOChId: 1
                 disGPIOChId: 0
                 termGPIOChId: 2
-                speed: 100
+                speed: 200
+                neutral_position: 1000
+                maximum_position: 5000
+                positive_direction: 0 # 0 or 1
         ms5837: true

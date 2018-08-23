@@ -1,5 +1,6 @@
 device: '/dev/ttyUSB0'
 baudrate: 115200
+save_config: false
 debug: false
 
 slaves:
@@ -10,16 +11,21 @@ slaves:
                 #timChId: 0
             #t2:
                 #timChId: 1
-        leds:
-            l1:
+        # leds:
+            # l1:
+            #     timChId: 0
+                # smart: true
+        bcs:
+          b1:
+                id: 0
                 timChId: 0
-                smart: true
-        #bcs:
-          #b1:
-                #timChId: 0
-                #dirGPIOChId: 0
-                #disGPIOChId: 1
-                #termGPIOChId: 2
+                dirGPIOChId: 0 # direction pin
+                disGPIOChId: 1 # disable pin
+                termGPIOChId: 2 # koncevik
+                speed: 200
+                neutral_position: 1000
+                maximum_position: 5000
+                positive_direction: 0 # 0 or 1
     #hvost:
         #id: 2
         #bcs:

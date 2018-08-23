@@ -19,6 +19,7 @@ public:
     pnh_.param("device", device, std::string("/dev/ttyUSB0"));
     pnh_.param("baudrate", baud, 115200);
     pnh_.param("debug", debug, false);
+    pnh_.param("save_config", save_config_, false);
 
     if (!mw_.initialize(device.c_str(), baud, debug))
     {
@@ -69,7 +70,12 @@ private:
       else if (devices.first == "bcs")
         configureBCS_(id, devices.second);
     }
-    mw_.saveConfig(id);
+
+    if (save_config_)
+    {
+      mw_.resetConfig(id);
+      mw_.saveConfig(id);
+    }
   }
 
   void configureThrusters_(int slave, XmlRpc::XmlRpcValue& params)
@@ -91,12 +97,6 @@ private:
         continue;
       }
       ROS_INFO("Adding thruster %s with id %i", t_params.first.c_str(), thruster.getId());
-
-//      ROS_WARN("Testing...");
-//      ros::Duration r(5);
-//      r.sleep();
-//      thruster.setSpeed(0.1);
-//      r.sleep();
     }
   }
 
@@ -158,7 +158,7 @@ private:
       int disGPIOChId = b_params.second["disGPIOChId"];
       int termGPIOChId = b_params.second["termGPIOChId"];
 
-      BCS bcs(&mw_, slave, 0, 0);
+      BCS bcs(&mw_, slave, 0, 0, 0, 0, 0);
       if (!bcs.initialize(timChId, dirGPIOChId, disGPIOChId, termGPIOChId))
       {
         ROS_INFO("Can't add bcs at channel %i", timChId);
@@ -170,6 +170,7 @@ private:
 
   ros::NodeHandle pnh_;
   ModbusWorker mw_;
+  bool save_config_;
 };
 
 

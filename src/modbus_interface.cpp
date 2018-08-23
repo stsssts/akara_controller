@@ -222,12 +222,13 @@ private:
 class BCS
 {
 public:
-  BCS(ModbusWorker *modbus, uint8_t slave, uint8_t bcsId, uint8_t speed)
-    : mw_(modbus), slave_(slave), device_id_(bcsId)
+  BCS(ModbusWorker *modbus, uint8_t slave, uint8_t bcsId, uint8_t speed,
+      uint16_t neutral_position, uint16_t maximum_position, uint8_t positive_direction)
+    : mw_(modbus), slave_(slave), device_id_(bcsId), neutral_pos_(neutral_position),
+      max_pos_(maximum_position), positive_direction_(positive_direction)
   {
-    pos_ = 0;
-    neutral_pos_ = 200; // eto odin oborot
-
+    current_pos_ = 0;
+//    neutral_pos_ = 200; // eto odin oborot
     setSpeed(speed);
   }
 
@@ -257,20 +258,32 @@ public:
 
   bool move(uint8_t direction, uint16_t steps)
   {
+    current_pos_ += (direction == 1) ? steps : -steps;
     move_bcs_data_t move_req;
     move_req.data.device_id = device_id_;
-    move_req.data.direction = direction;
+    move_req.data.direction = (direction == 1) ? positive_direction_ : 1 - positive_direction_;
     move_req.data.steps = SWAP_BYTES(steps);
     return mw_->set(slave_, MOVE, move_req.BINARY_DATA_SIZE, move_req.binary);
   }
 
   bool moveToEnd(uint8_t direction)
   {
-    pos_ = (direction == 0) ? -1 : 1;
-    move_to_end_bcs_data_t move_req;
-    move_req.data.device_id = device_id_;
-    move_req.data.direction = direction;
-    return mw_->set(slave_, MOVE_TO_END, move_req.BINARY_DATA_SIZE, move_req.binary);
+    // ne rabotaet bez koncevika
+//    current_pos_ = (direction == 0) ? 0 : max_pos_;
+//    move_to_end_bcs_data_t move_req;
+//    move_req.data.device_id = device_id_;
+//    move_req.data.direction = direction;
+//    return mw_->set(slave_, MOVE_TO_END, move_req.BINARY_DATA_SIZE, move_req.binary);
+    if (direction == 0)
+    {
+      current_pos_ = 0;
+      return move(direction, current_pos_);
+    }
+    else
+    {
+      current_pos_ = max_pos_;
+      return move(direction, max_pos_ - current_pos_);
+    }
   }
 
   bool stop()
@@ -280,20 +293,29 @@ public:
     return mw_->set(slave_, STOP, stop_req.BINARY_DATA_SIZE, stop_req.binary);
   }
 
-  void setNeutral()
+  void moveToNeutral()
   {
-    pos_ = 0;
-    int steps = neutral_pos_- pos_;
-    pos_ = neutral_pos_;
+    int steps = neutral_pos_- current_pos_;
+    current_pos_ = neutral_pos_;
     if (steps > 0)
-      move(1, steps);
+      move(1, static_cast<uint16_t>(abs(steps)));
     else
-      move(0, steps);
+      move(0, static_cast<uint16_t>(abs(steps)));
+  }
+
+  void setZero()
+  {
+    current_pos_ = 0;
   }
 
   int getId()
   {
     return device_id_;
+  }
+
+  int getPosition()
+  {
+    return current_pos_;
   }
 
 private:
@@ -309,8 +331,11 @@ private:
   ModbusWorker *mw_;
   const uint8_t slave_;
   uint8_t device_id_;
-  uint8_t pos_;
+
+  uint16_t current_pos_;
   uint16_t neutral_pos_;
+  uint16_t max_pos_;
+  uint8_t positive_direction_;
 };
 
 class MS5837
