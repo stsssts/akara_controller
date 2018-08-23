@@ -195,6 +195,12 @@ private:
         if (load)
           loadMS5837Parameters_(id);
       }
+      else if (devices.first == "hydroacoustics")
+      {
+        bool load = devices.second;
+        if (load)
+          loadHydroAcousticsParameters_(id);
+      }
     }
   }
 
@@ -292,12 +298,18 @@ private:
       ROS_WARN("Failed to add MS5837 on slave %i", slave);
   }
 
+  void loadHydroAcousticsParameters_(int slave)
+  {
+    hydroacoustics_.initialize(&modbus_, slave);
+  }
+
   ModbusWorker modbus_;
 
   std::vector<Thruster> thrusters_;
   std::vector<LED> leds_;
   std::vector<BCS> bcs_;
   std::vector<MS5837> ms5837_;
+  HydroAcoustics hydroacoustics_;
 
   ros::Timer timer_;
 

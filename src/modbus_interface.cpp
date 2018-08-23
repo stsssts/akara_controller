@@ -440,4 +440,40 @@ private:
   bool enabled_;
 };
 
+class HydroAcoustics
+{
+public:
+  HydroAcoustics()
+  {
+    mw_ = NULL;
+  }
+
+  void initialize(ModbusWorker *modbus, uint8_t slave)
+  {
+    mw_ = modbus;
+    slave_ = slave;
+  }
+
+  bool readAngles(float *phi, float *psi)
+  {
+    hydroacustics_data_t data;
+    if (!mw_->get(slave_, READ, data.BINARY_DATA_SIZE, data.binary))
+      return false;
+
+    ROS_INFO("detect: %u, k12: %i, level1: %i, k13: %i, level2: %i, k23: %i",
+             data.data.detect, data.data.k12, data.data.level1, data.data.k13, data.data.level2, data.data.k23);
+
+    return true;
+  }
+
+private:
+  enum HydroAcousticsCommand
+  {
+    READ = 0x00
+  };
+
+  ModbusWorker *mw_;
+  uint8_t slave_;
+};
+
 }

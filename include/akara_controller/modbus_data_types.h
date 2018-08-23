@@ -184,6 +184,29 @@ union temp_and_press_data_t
   uint16_t binary[BINARY_DATA_SIZE];
 };
 #pragma pack (pop)
-}
+
+
+#pragma pack (push, 1)
+union hydroacustics_data_t
+{
+  enum
+  {
+    BINARY_DATA_SIZE = 3
+  };
+  struct
+  {
+    uint8_t detect;
+    uint8_t k12;
+    uint8_t level1;
+    uint8_t k13;
+    uint8_t level2;
+    uint8_t k23;
+  } data;
+
+  uint16_t binary[BINARY_DATA_SIZE];
+};
+#pragma pack (pop)
+
+} // namespace modbus_interface
 
 #endif // MODBUS_DATA_TYPES_H
