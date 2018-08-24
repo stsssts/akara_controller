@@ -53,7 +53,7 @@ public:
   bool readBuffer(int slave, int nb, uint16_t *data)
   {
     modbus_set_slave(context_, slave);
-    return modbus_read_registers(context_, READ_BUFFER, nb, data);
+    return modbus_read_registers(context_, READ_BUFFER, nb, data) != -1;
   }
 
   int ping(uint8_t slave)
@@ -274,16 +274,24 @@ public:
 //    move_req.data.device_id = device_id_;
 //    move_req.data.direction = direction;
 //    return mw_->set(slave_, MOVE_TO_END, move_req.BINARY_DATA_SIZE, move_req.binary);
-    if (direction == 0)
+
+    ROS_INFO("v koncevike: %u", checkTerminal_());
+    if (direction == 0) // dvigaemsya k konceviku
     {
       current_pos_ = 0;
-      return move(direction, current_pos_);
+      if (checkTerminal_())
+        return true;
+      move_to_end_bcs_data_t move_req;
+      move_req.data.device_id = device_id_;
+      move_req.data.direction = 1 - positive_direction_;
+      return mw_->set(slave_, MOVE_TO_END, move_req.BINARY_DATA_SIZE, move_req.binary);
     }
-    else
-    {
-      current_pos_ = max_pos_;
-      return move(direction, max_pos_ - current_pos_);
-    }
+//    else
+//    {
+//      int steps_to_move = max_pos_ - current_pos_;
+//      current_pos_ = max_pos_;
+//      return move(positive_direction_, steps_to_move);
+//    }
   }
 
   bool stop()
@@ -319,13 +327,21 @@ public:
   }
 
 private:
+  bool checkTerminal_()
+  {
+    uint16_t d;
+    mw_->get(slave_, READ_TERMINAL, 1, &d);
+    return SWAP_BYTES(d) == 0; // v koncevike
+  }
+
   enum BCSCommand
   {
     INIT        = 0x30,
     SET_SPEED   = 0x31,
     MOVE        = 0x32,
     MOVE_TO_END = 0x33,
-    STOP        = 0x34
+    STOP        = 0x34,
+    READ_TERMINAL        = 0x35
   };
 
   ModbusWorker *mw_;
@@ -335,7 +351,7 @@ private:
   uint16_t current_pos_;
   uint16_t neutral_pos_;
   uint16_t max_pos_;
-  uint8_t positive_direction_;
+  uint8_t positive_direction_; // ot koncevika
 };
 
 class MS5837

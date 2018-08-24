@@ -107,39 +107,49 @@ public:
 
   bool bcsPositionCallback(akara_msgs::BCSRequest& req, akara_msgs::BCSResponse& res)
   {
-    if (req.buoyancy == "set_zero")
+    try // if we can convert argument to int assume it is the speed
     {
+      int speed = std::stoi(req.buoyancy);
       for (auto& bcs : bcs_)
-        bcs.setZero(); // sets current position to zero
+        bcs.setSpeed(speed);
       return true;
     }
-
-    if (req.buoyancy == "positive")
+    catch (std::exception& e)
     {
-      for (auto& bcs : bcs_)
-        bcs.moveToEnd(1);
-      return true;
-    }
+      if (req.buoyancy == "set_zero")
+      {
+        for (auto& bcs : bcs_)
+          bcs.setZero(); // sets current position to zero
+        return true;
+      }
 
-    if (req.buoyancy == "negative")
-    {
-      for (auto& bcs : bcs_)
-        bcs.moveToEnd(0);
-      return true;
-    }
+      if (req.buoyancy == "positive")
+      {
+        for (auto& bcs : bcs_)
+          bcs.moveToEnd(1);
+        return true;
+      }
 
-    if (req.buoyancy == "neutral")
-    {
-      for (auto& bcs : bcs_)
-        bcs.moveToNeutral();
-      return true;
-    }
+      if (req.buoyancy == "negative")
+      {
+        for (auto& bcs : bcs_)
+          bcs.moveToEnd(0);
+        return true;
+      }
 
-    if (req.buoyancy == "stop")
-    {
-      for (auto& bcs : bcs_)
-        bcs.stop();
-      return true;
+      if (req.buoyancy == "neutral")
+      {
+        for (auto& bcs : bcs_)
+          bcs.moveToNeutral();
+        return true;
+      }
+
+      if (req.buoyancy == "stop")
+      {
+        for (auto& bcs : bcs_)
+          bcs.stop();
+        return true;
+      }
     }
 
     ROS_ERROR("Use one of the following commands: set_zero, positive, negative, neutral, stop");
