@@ -61,6 +61,14 @@ private:
       return;
     }
 
+    if (save_config_)
+    {
+      ROS_WARN("Resetting slave, wait 6 seconds...");
+      mw_.resetConfig(id);
+      mw_.reset(id);
+      ros::Duration(6).sleep();
+    }
+
     for (auto devices : slave)
     {
       if (devices.first == "thrusters")
@@ -73,8 +81,10 @@ private:
 
     if (save_config_)
     {
-      mw_.resetConfig(id);
-      mw_.saveConfig(id);
+      if (mw_.saveConfig(id))
+        ROS_INFO("Config successfully saved");
+      else
+        ROS_ERROR("Failed to save config");
     }
   }
 
