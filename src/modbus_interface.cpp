@@ -41,13 +41,25 @@ public:
   bool get(int slave, int cmd, int nb, uint16_t *data)
   {
     modbus_set_slave(context_, slave);
-    return modbus_read_registers(context_, cmd, nb, data) != -1;
+    if (modbus_read_registers(context_, cmd, nb, data) == -1)
+    {
+      ROS_ERROR("Failed to execute command %x on slave %i", cmd, slave);
+      return false;
+    }
+    else
+      return true;
   }
 
   bool set(int slave, int cmd, int nb, uint16_t *data)
   {
     modbus_set_slave(context_, slave);
-    return modbus_write_registers(context_, cmd, nb, data) != -1;
+    if (modbus_write_registers(context_, cmd, nb, data) == -1)
+    {
+      ROS_ERROR("Failed to execute command %x on slave %i", cmd, slave);
+      return false;
+    }
+    else
+      return true;
   }
 
   bool readBuffer(int slave, int nb, uint16_t *data)
@@ -79,11 +91,6 @@ public:
     return set(slave, RESET_CONFIG, 0, NULL);
   }
 
-  bool deinitializeConfig(uint8_t slave)
-  {
-    return set(slave, DEINITIALIZE_CONFIG, 0, NULL);
-  }
-
   void reset(uint8_t slave)
   {
     set(slave, RESET, 0, NULL);
@@ -98,7 +105,6 @@ private:
     RESET_CONFIG = 0x03,
     RESET        = 0x04,
     READ_BUFFER  = 0x06,
-    DEINITIALIZE_CONFIG = 0x07
   };
 
   modbus_t *context_;
@@ -174,7 +180,7 @@ public:
 
   bool initialize(uint8_t timChId)
   {
-    int cmd = smart_ ? INIT_S : INIT_S;
+    int cmd = smart_ ? INIT_S : INIT;
     uint16_t d = timChId << 8;
     if (!mw_->set(slave_, cmd, 1, &d))
       return false;
@@ -224,11 +230,13 @@ class BCS
 public:
   BCS(ModbusWorker *modbus, uint8_t slave, uint8_t bcsId, uint8_t speed,
       uint16_t neutral_position, uint16_t maximum_position, uint8_t positive_direction)
-    : mw_(modbus), slave_(slave), device_id_(bcsId), neutral_pos_(neutral_position),
-      max_pos_(maximum_position), positive_direction_(positive_direction)
+    : mw_(modbus),
+      slave_(slave),
+      device_id_(bcsId),
+      neutral_pos_(neutral_position),
+      max_pos_(maximum_position),
+      positive_direction_(positive_direction)
   {
-    current_pos_ = 0;
-//    neutral_pos_ = 200; // eto odin oborot
     setSpeed(speed);
   }
 
@@ -256,59 +264,55 @@ public:
     return mw_->set(slave_, SET_SPEED, sp_req.BINARY_DATA_SIZE, sp_req.binary);
   }
 
-  bool move(uint8_t direction, uint16_t steps)
+  void move(int steps)
   {
-    current_pos_ += (direction == 1) ? steps : -steps;
+    int new_position = current_pos_ + steps;
+
+    if (new_position < 0 || new_position > max_pos_)
+      return;
+
     move_bcs_data_t move_req;
     move_req.data.device_id = device_id_;
-    move_req.data.direction = (direction == 1) ? positive_direction_ : 1 - positive_direction_;
-    move_req.data.steps = SWAP_BYTES(steps);
-    return mw_->set(slave_, MOVE, move_req.BINARY_DATA_SIZE, move_req.binary);
+    move_req.data.steps = SWAP_BYTES(static_cast<uint16_t>(abs(steps)));
+
+    if (steps < 0) // k konceviku
+      move_req.data.direction = 1 - positive_direction_;
+    else // ot koncevika
+      move_req.data.direction = positive_direction_;
+
+
+    current_pos_ = new_position;
+    ROS_INFO("moving, steps: %i, dir: %u, current position: %i", steps, move_req.data.direction, current_pos_);
+
+    mw_->set(slave_, MOVE, move_req.BINARY_DATA_SIZE, move_req.binary);
   }
 
-  bool moveToEnd(uint8_t direction)
+  void setPositiveBuoyancy()
   {
-    // ne rabotaet bez koncevika
-//    current_pos_ = (direction == 0) ? 0 : max_pos_;
-//    move_to_end_bcs_data_t move_req;
-//    move_req.data.device_id = device_id_;
-//    move_req.data.direction = direction;
-//    return mw_->set(slave_, MOVE_TO_END, move_req.BINARY_DATA_SIZE, move_req.binary);
+    move(max_pos_ - current_pos_);
+  }
 
-    ROS_INFO("v koncevike: %u", checkTerminal_());
-    if (direction == 0) // dvigaemsya k konceviku
-    {
-      current_pos_ = 0;
-      if (checkTerminal_())
-        return true;
-      move_to_end_bcs_data_t move_req;
-      move_req.data.device_id = device_id_;
-      move_req.data.direction = 1 - positive_direction_;
-      return mw_->set(slave_, MOVE_TO_END, move_req.BINARY_DATA_SIZE, move_req.binary);
-    }
-//    else
-//    {
-//      int steps_to_move = max_pos_ - current_pos_;
-//      current_pos_ = max_pos_;
-//      return move(positive_direction_, steps_to_move);
-//    }
+  void setNeutralBuoyancy()
+  {
+    move(neutral_pos_ - current_pos_);
+  }
+
+  void setNegativeBuoyancy()
+  {
+    current_pos_ = 0;
+    if (checkTerminal_()) // uzhe vozle koncevika
+      return;
+
+    move_to_end_bcs_data_t req;
+    req.data.device_id = device_id_;
+    req.data.direction = 1 - positive_direction_;
+    mw_->set(slave_, MOVE_TO_END, req.BINARY_DATA_SIZE, req.binary);
   }
 
   bool stop()
   {
-    stop_bcs_data_t stop_req;
-    stop_req.data.device_id = SWAP_BYTES((uint16_t)device_id_);
-    return mw_->set(slave_, STOP, stop_req.BINARY_DATA_SIZE, stop_req.binary);
-  }
-
-  void moveToNeutral()
-  {
-    int steps = neutral_pos_- current_pos_;
-    current_pos_ = neutral_pos_;
-    if (steps > 0)
-      move(1, static_cast<uint16_t>(abs(steps)));
-    else
-      move(0, static_cast<uint16_t>(abs(steps)));
+    uint16_t id = device_id_ << 8;
+    return mw_->set(slave_, STOP, 1, &id);
   }
 
   void setZero()
@@ -336,21 +340,21 @@ private:
 
   enum BCSCommand
   {
-    INIT        = 0x30,
-    SET_SPEED   = 0x31,
-    MOVE        = 0x32,
-    MOVE_TO_END = 0x33,
-    STOP        = 0x34,
-    READ_TERMINAL        = 0x35
+    INIT          = 0x30,
+    SET_SPEED     = 0x31,
+    MOVE          = 0x32,
+    MOVE_TO_END   = 0x33,
+    STOP          = 0x34,
+    READ_TERMINAL = 0x35
   };
 
   ModbusWorker *mw_;
   const uint8_t slave_;
   uint8_t device_id_;
 
-  uint16_t current_pos_;
-  uint16_t neutral_pos_;
-  uint16_t max_pos_;
+  int current_pos_;
+  int neutral_pos_;
+  int max_pos_;
   uint8_t positive_direction_; // ot koncevika
 };
 
@@ -371,21 +375,13 @@ public:
   bool checkConnection()
   {
     if (!mw_)
-    {
-      enabled_ = false;
       return false;
-    }
 
     uint16_t data[1];
     if (mw_->get(slave_, CHECK_CONNECTION, 1, data))
-      return enabled_ = !data[0];
+      return !data[0];
 
     return false;
-  }
-
-  bool ok()
-  {
-    return enabled_;
   }
 
   bool readTemp(float *temp)
@@ -453,7 +449,6 @@ private:
 
   ModbusWorker *mw_;
   uint8_t slave_;
-  bool enabled_;
 };
 
 class HydroAcoustics

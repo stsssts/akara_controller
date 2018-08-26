@@ -97,12 +97,7 @@ public:
     }
 
     for (int i = 0; i < msg->power.size(); ++i)
-    {
-      uint8_t dir = msg->power[i] < 0 ? 0 : 1;
-      uint16_t steps = static_cast<uint16_t>(abs(msg->power[i]));
-      bcs_[i].move(dir, steps);
-      ROS_INFO("Moving bcs%i %u steps, dir: %u, position: %i", i, steps, dir, bcs_[i].getPosition());
-    }
+      bcs_[i].move(msg->power[i]);
   }
 
   bool bcsPositionCallback(akara_msgs::BCSRequest& req, akara_msgs::BCSResponse& res)
@@ -126,21 +121,21 @@ public:
       if (req.buoyancy == "positive")
       {
         for (auto& bcs : bcs_)
-          bcs.moveToEnd(1);
+          bcs.setPositiveBuoyancy();
         return true;
       }
 
       if (req.buoyancy == "negative")
       {
         for (auto& bcs : bcs_)
-          bcs.moveToEnd(0);
+          bcs.setNegativeBuoyancy();
         return true;
       }
 
       if (req.buoyancy == "neutral")
       {
         for (auto& bcs : bcs_)
-          bcs.moveToNeutral();
+          bcs.setNeutralBuoyancy();
         return true;
       }
 
@@ -161,12 +156,13 @@ public:
     float pressure = 0;
     for (auto& m : ms5837_)
     {
-      if (m.ok())
+      float p;
+      if (!m.readPress(&p))
       {
-        float p;
-        m.readPress(&p);
-        pressure += p;
+        ROS_ERROR("slomalsya datchik!");
+        return;
       }
+      pressure += p;
     }
 
     press_msg_.fluid_pressure = pressure / ms5837_.size();
@@ -189,6 +185,10 @@ private:
       ROS_ERROR("Can't ping slave: %i", id);
       return;
     }
+
+//     akkuratno!!!
+//    if (id == 2)
+//      modbus_.changeSlaveAddress(id, 7);
 
     ROS_INFO("Configure slave %i", id);
     for (auto devices : slave)
@@ -268,6 +268,11 @@ private:
 
       bcs_.push_back(BCS(&modbus_, slave, id, speed, neutral_pos, max_pos, positive_dir));
       ROS_INFO("Added bcs %s - slave: %i, id: %i", p.first.c_str(), slave, id);
+      if (p.first != std::string("manipulator"))
+      {
+        bcs_.back().setNegativeBuoyancy();
+        ROS_WARN("Moving bcs %s to zero position...", p.first.c_str());
+      }
     }
   }
 
