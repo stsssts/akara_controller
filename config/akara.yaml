@@ -4,41 +4,84 @@ save_config: false
 debug: false
 
 slaves:
-    nos:
+  nos:
+    id: 1
+    ms5837: true
+    leds:
+        led:
+          id: 0
+          timChId: 0
+          smart: false
+
+  nosovoi_sip:
+    id: 2
+    bcs:
+      b1:
+        id: 0
+        timChId: 0
+        dirGPIOChId: 0 # direction pin
+        disGPIOChId: 1 # disable pin
+        termGPIOChId: 2 # koncevik
+        speed: 150
+        neutral_position: 7000
+        maximum_position: 15000 # positive buoyancy
+        positive_direction: 0 # 0 or 1
+    
+  nosovaya_podrulka_vertikalnaya:
+    id: 3
+    thrusters:
+      t1:
+        id: 0
+        timChId: 0
+
+  nosovaya_podrulka_gorizontalnaya:
+    id: 4
+    thrusters:
+      t1:
+        id: 0
+        timChId: 0
+        
+  hvostovaya_podrulka_gorizontalnaya:
+    id: 5
+    thrusters:
+      t1:
+        id: 0
+        timChId: 0
+  
+  hvostovaya_podrulka_vertikalnaya:
+    id: 6
+    thrusters:
+      t1:
+        id: 0 
+        timChId: 0
+        
+  hvostoy_sip:
+    id: 7
+    bcs:
+      b1:
+        id: 0
+        timChId: 0
+        dirGPIOChId: 0 # direction pin
+        disGPIOChId: 1 # disable pin
+        termGPIOChId: 2 # koncevik
+        speed: 150
+        neutral_position: 7000
+        maximum_position: 15000 # positive buoyancy
+        positive_direction: 0 # 0 or 1
+
+  hvost:
+    id: 8
+    ms5837: true
+    thrusters:
+      t1:
+        id: 0
+        timChId: 0
+      t2:
         id: 1
-        #thrusters:
-            #t1:
-                #timChId: 0
-            #t2:
-                #timChId: 1
-        # leds:
-            # l1:
-            #     timChId: 0
-                # smart: true
-        bcs:
-          b1:
-                id: 0
-                timChId: 0
-                dirGPIOChId: 0 # direction pin
-                disGPIOChId: 1 # disable pin
-                termGPIOChId: 2 # koncevik
-                speed: 200
-                neutral_position: 1000
-                maximum_position: 5000
-                positive_direction: 0 # 0 or 1
-    #hvost:
-        #id: 2
-        #bcs:
-            #b1:
-                #timChId: 0
-                #dirGPIOChId: 0
-                #disGPIOChId: 0
-                #termGPIOChId: 0
-    #seredina:
-        #id: 3
-        #bcs:
-            #b2:
-                #timChId: 1
-                #dirGPIOChId: 0
-                #disGPIOChId: 0
-                #termGPIOChId: 0
+        timChId: 1
+    leds:
+      led:
+        id: 0
+        timChId: 2
+        smart: false
+        
