@@ -220,12 +220,18 @@ private:
     {
       if (!p.second.hasMember("id"))
       {
-        ROS_ERROR("Doesn't find id parameter for thrusers");
+        ROS_ERROR("Doesn't find id parameter for thrusters");
+        continue;
+      }
+      if (!p.second.hasMember("deadzone"))
+      {
+        ROS_ERROR("Doesn't find deadzone parameter for thrusters");
         continue;
       }
 
       int id = p.second["id"];
-      thrusters_.push_back(Thruster(&modbus_, slave, id));
+      int deadzone = p.second["deadzone"];
+      thrusters_.push_back(Thruster(&modbus_, slave, id, deadzone));
       ROS_INFO("Added thruster %s - slave: %i, id: %i", p.first.c_str(), slave, id);
     }
   }

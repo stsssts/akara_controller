@@ -100,7 +100,7 @@ private:
 
       int timChId = t_params.second["timChId"];
 
-      Thruster thruster(&mw_, slave, 0);
+      Thruster thruster(&mw_, slave, 0, 0);
       if (!thruster.initialize(timChId))
       {
         ROS_INFO("Can't add thruster at channel %i", timChId);

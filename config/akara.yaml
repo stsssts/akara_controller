@@ -33,6 +33,7 @@ slaves:
       t1:
         id: 0
         timChId: 0
+        deadzone: 3
 
   nosovaya_podrulka_gorizontalnaya:
     id: 4
@@ -40,6 +41,7 @@ slaves:
       t1:
         id: 0
         timChId: 0
+        deadzone: 3
         
   hvostovaya_podrulka_gorizontalnaya:
     id: 5
@@ -47,6 +49,7 @@ slaves:
       t1:
         id: 0
         timChId: 0
+        deadzone: 3
   
   hvostovaya_podrulka_vertikalnaya:
     id: 6
@@ -54,6 +57,7 @@ slaves:
       t1:
         id: 0 
         timChId: 0
+        deadzone: 3
         
   hvostoy_sip:
     id: 7
@@ -76,9 +80,11 @@ slaves:
       t1:
         id: 0
         timChId: 0
+        deadzone: 3
       t2:
         id: 1
         timChId: 1
+        deadzone: 3
     leds:
       led:
         id: 0

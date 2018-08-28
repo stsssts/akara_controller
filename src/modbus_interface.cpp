@@ -113,8 +113,8 @@ private:
 class Thruster
 {
 public:
-  Thruster(ModbusWorker* modbus, uint8_t slave, uint8_t thrId)
-    : mw_(modbus), slave_(slave)
+  Thruster(ModbusWorker* modbus, uint8_t slave, uint8_t thrId, uint8_t deadzone)
+    : mw_(modbus), slave_(slave), deadzone_(deadzone)
   {
     sp_req_.data.device_id = thrId;
   }
@@ -148,9 +148,15 @@ public:
 private:
   int8_t _calculateSpeed(double sp)
   {
-    if (abs(sp) > 1.0)
-      sp = copysign(1.0, sp);
-    return sp * 127;
+    if (sp == 0)
+      return 0;
+
+    int8_t s = sp*127 + deadzone_;
+
+    if (abs(s) > 127)
+      return copysign(127, s);
+    else
+      return s;
   }
 
   enum Command : int
@@ -162,6 +168,7 @@ private:
   ModbusWorker* mw_;
   const uint8_t slave_;
   power_data_t sp_req_;
+  const uint8_t deadzone_;
 };
 
 class LED
