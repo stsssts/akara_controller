@@ -1,16 +1,17 @@
 device: '/dev/ttyUSB0'
 baudrate: 115200
 debug: false
-rate: 10 # Hz
+rate: 2 # Hz
+save_config: false
 
 slaves:
     module:
         id: 1
-        leds:
-            camera_led:
-                id: 0
-                timChId: 2
-                smart: true
+        # leds:
+        #     camera_led:
+        #         id: 0
+        #         timChId: 2
+        #         smart: true
         bcs:
             manipulator:
                 id: 0
@@ -18,7 +19,7 @@ slaves:
                 dirGPIOChId: 1
                 disGPIOChId: 0
                 termGPIOChId: 2
-                speed: 200
+                speed: 250
                 neutral_position: 1000
                 maximum_position: 5000
                 positive_direction: 0 # 0 or 1
