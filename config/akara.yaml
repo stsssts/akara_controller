@@ -26,14 +26,14 @@ slaves:
         neutral_position: 7000
         maximum_position: 15000 # positive buoyancy
         positive_direction: 0 # 0 or 1
-    
+
   nosovaya_podrulka_vertikalnaya:
     id: 3
     thrusters:
       t1:
         id: 0
         timChId: 0
-        deadzone: 3
+        deadzone: 5
 
   # nosovaya_podrulka_gorizontalnaya:
   #   id: 4
@@ -42,23 +42,23 @@ slaves:
   #       id: 0
   #       timChId: 0
   #       deadzone: 3
-        
-  hvostovaya_podrulka_gorizontalnaya:
+
+  hvostovaya_podrulka_vertikalnaya:
     id: 5
     thrusters:
       t1:
         id: 0
         timChId: 0
-        deadzone: 3
-  
-  # hvostovaya_podrulka_vertikalnaya:
+        deadzone: 5
+
+  # hvostovaya_podrulka_gorizontalnaya:
   #   id: 6
   #   thrusters:
   #     t1:
-  #       id: 0 
+  #       id: 0
   #       timChId: 0
   #       deadzone: 3
-        
+
   hvostoy_sip:
     id: 7
     bcs:
@@ -90,4 +90,5 @@ slaves:
         id: 0
         timChId: 2
         smart: false
-        
+
+
