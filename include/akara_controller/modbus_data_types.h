@@ -179,11 +179,11 @@ union hydroacustics_data_t
   struct
   {
     uint8_t detect;
-    uint8_t k12;
+    int8_t k12;
     uint8_t level1;
-    uint8_t k13;
+    int8_t k13;
     uint8_t level2;
-    uint8_t k23;
+    int8_t k23;
   } data;
 
   uint16_t binary[BINARY_DATA_SIZE];

@@ -393,6 +393,9 @@ public:
 
   bool readTemp(float *temp)
   {
+    if (!mw_)
+      return false;
+
     temp_data_t temp_data;
     if (!mw_->get(slave_, READ_TEMP, temp_data.BINARY_DATA_SIZE, temp_data.binary))
       return false;
@@ -466,14 +469,25 @@ public:
     mw_ = NULL;
   }
 
-  void initialize(ModbusWorker *modbus, uint8_t slave)
+  void initialize(ModbusWorker *modbus, uint8_t slave, int fd, float d, float c)
   {
     mw_ = modbus;
     slave_ = slave;
+    fd_ = fd;
+    d_ = d;
+    c_ = c;
+  }
+
+  bool ok()
+  {
+    return mw_ != NULL;
   }
 
   bool readAngles(float *phi, float *psi)
   {
+    if (!mw_)
+      return false;
+    
     hydroacustics_data_t data;
     if (!mw_->get(slave_, READ, data.BINARY_DATA_SIZE, data.binary))
       return false;
@@ -481,10 +495,25 @@ public:
     ROS_INFO("detect: %u, k12: %i, level1: %i, k13: %i, level2: %i, k23: %i",
              data.data.detect, data.data.k12, data.data.level1, data.data.k13, data.data.level2, data.data.k23);
 
+    // float level = level << 8 
+    *phi = getPhi_(data.data.k12);
+    *psi = getPsi_(data.data.k13, data.data.k23);
+
     return true;
   }
 
 private:
+  float getPhi_(int k)
+  {
+    float dx = float(k / fd_ * c_);
+    return asinf(dx / d_);
+  }
+
+  float getPsi_(int k1, int k2)
+  {
+    return getPhi_( (k1 + k2)/2 );
+  }
+
   enum HydroAcousticsCommand
   {
     READ = 0x00
@@ -492,6 +521,10 @@ private:
 
   ModbusWorker *mw_;
   uint8_t slave_;
+
+  int fd_; // discretisation freq
+  float d_; // distance
+  float c_; // speed of sound in water
 };
 
 }

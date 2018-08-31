@@ -65,6 +65,12 @@ public:
       press_publisher_ = nh.advertise<sensor_msgs::FluidPressure>("pressure", 1);
       timer_ = nh.createTimer(ros::Rate(rate), &AkaraController::publishPressure, this);
     }
+
+    if (hydroacoustics_.ok())
+    {
+      // TODO: create publisher
+      // TODO: create timer
+    }
   }
 
   void thrustersCallback(const akara_msgs::ThrusterConstPtr& msg)
@@ -199,17 +205,13 @@ private:
         loadLedParameters_(id, devices.second);
       else if (devices.first == "bcs")
         loadBCSParameters_(id, devices.second);
+      else if (devices.first == "hydroacoustics")
+        loadHydroAcousticsParameters_(id, devices.second);
       else if (devices.first == "ms5837")
       {
         bool load = devices.second;
         if (load)
           loadMS5837Parameters_(id);
-      }
-      else if (devices.first == "hydroacoustics")
-      {
-        bool load = devices.second;
-        if (load)
-          loadHydroAcousticsParameters_(id);
       }
     }
   }
@@ -319,9 +321,29 @@ private:
       ROS_WARN("Failed to add MS5837 on slave %i", slave);
   }
 
-  void loadHydroAcousticsParameters_(int slave)
+  void loadHydroAcousticsParameters_(int slave, XmlRpc::XmlRpcValue& params)
   {
-    hydroacoustics_.initialize(&modbus_, slave);
+    if (!params.hasMember("distance"))
+    {
+      ROS_ERROR("Doesn't find distance parameter for hydroacoustics");
+      return;
+    }
+    if (!params.hasMember("disc_freq"))
+    {
+      ROS_ERROR("Doesn't find disc_freq parameter for hydroacoustics");
+      return;
+    }
+    if (!params.hasMember("c"))
+    {
+      ROS_ERROR("Doesn't find c parameter for hydroacoustics");
+      return;
+    }
+
+    int fd = params["disc_freq"];
+    double d = params["distance"];
+    double c = params["c"];
+
+    hydroacoustics_.initialize(&modbus_, slave, fd, d, c);
   }
 
   ModbusWorker modbus_;

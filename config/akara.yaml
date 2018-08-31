@@ -4,6 +4,13 @@ save_config: false
 debug: false
 
 slaves:
+  # nos_eholot:
+  #   id: 10
+  #   hydroacoustics:
+  #     distance: 123 # mm?
+  #     disc_freq: 123
+  #     c: 124 # speed of sound in water
+
   nos:
     id: 1
     ms5837: true
